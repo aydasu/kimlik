@@ -75,9 +75,19 @@ function createApp($userId, $name, $description, $redirectUri) {
     $pdo = Database::connect();
     $clientId = generateClientId();
     $clientSecret = generateClientSecret();
+    $hashedSecret = password_hash($clientSecret, PASSWORD_DEFAULT);
     
     $stmt = $pdo->prepare("INSERT INTO apps (user_id, name, description, client_id, client_secret, redirect_uri, secret_shown, created_at) VALUES (?, ?, ?, ?, ?, ?, FALSE, NOW())");
-    return $stmt->execute([$userId, $name, $description, $clientId, $clientSecret, $redirectUri]);
+    $result = $stmt->execute([$userId, $name, $description, $clientId, $hashedSecret, $redirectUri]);
+    
+    if ($result) {
+        // Return both the hashed and plain secret for one-time display
+        return [
+            'success' => true,
+            'client_secret' => $clientSecret
+        ];
+    }
+    return ['success' => false];
 }
 
 function generateClientId($length = 32) {

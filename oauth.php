@@ -80,7 +80,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['grant_type'])) {
         $clientSecret = $_POST['client_secret'] ?? '';
         $redirectUri = $_POST['redirect_uri'] ?? '';
         
-        error_log("Token request received - Code: $code, Client ID: $clientId, Redirect URI: $redirectUri");
+        error_log("Token request received - Code: $code, Client ID: $clientId, Client Secret: $clientSecret, Redirect URI: $redirectUri");
         
         if (empty($code) || empty($clientId) || empty($clientSecret)) {
             error_log("Missing required parameters");
@@ -91,11 +91,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['grant_type'])) {
         
         // Validate client credentials
         $pdo = Database::connect();
-        $stmt = $pdo->prepare("SELECT * FROM apps WHERE client_id = ? AND client_secret = ?");
-        $stmt->execute([$clientId, $clientSecret]);
+        $stmt = $pdo->prepare("SELECT * FROM apps WHERE client_id = ?");
+        $stmt->execute([$clientId]);
         $app = $stmt->fetch(PDO::FETCH_ASSOC);
         
-        if (!$app) {
+        if (!$app || !password_verify($clientSecret, $app['client_secret'])) {
             error_log("Invalid client credentials");
             http_response_code(401);
             echo json_encode(['error' => 'invalid_client']);
@@ -161,11 +161,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['grant_type'])) {
         
         // Validate client credentials
         $pdo = Database::connect();
-        $stmt = $pdo->prepare("SELECT * FROM apps WHERE client_id = ? AND client_secret = ?");
-        $stmt->execute([$clientId, $clientSecret]);
+        $stmt = $pdo->prepare("SELECT * FROM apps WHERE client_id = ?");
+        $stmt->execute([$clientId]);
         $app = $stmt->fetch(PDO::FETCH_ASSOC);
         
-        if (!$app) {
+        if (!$app || !password_verify($clientSecret, $app['client_secret'])) {
             http_response_code(401);
             echo json_encode(['error' => 'invalid_client']);
             exit();

@@ -22,7 +22,9 @@ if ($_POST && isset($_POST['create_app'])) {
     } elseif (!filter_var($redirectUri, FILTER_VALIDATE_URL)) {
         $error = 'Geçersiz yönlendirme URI formatı.';
     } else {
-        if (createApp($_SESSION['user_id'], $name, $description, $redirectUri)) {
+        $result = createApp($_SESSION['user_id'], $name, $description, $redirectUri);
+        if ($result['success']) {
+            $_SESSION['new_app_secret'] = $result['client_secret'];
             $success = 'Uygulama başarıyla oluşturuldu!';
         } else {
             $error = 'Uygulama oluşturulamadı.';
@@ -42,8 +44,10 @@ if (isset($_GET['delete']) && is_numeric($_GET['delete'])) {
 if (isset($_GET['refresh_secret']) && is_numeric($_GET['refresh_secret'])) {
     $pdo = Database::connect();
     $newSecret = bin2hex(random_bytes(32)); // Generate new secret
+    $hashedSecret = password_hash($newSecret, PASSWORD_DEFAULT);
     $stmt = $pdo->prepare("UPDATE apps SET client_secret = ?, secret_shown = FALSE WHERE id = ? AND user_id = ?");
-    if ($stmt->execute([$newSecret, $_GET['refresh_secret'], $_SESSION['user_id']])) {
+    if ($stmt->execute([$hashedSecret, $_GET['refresh_secret'], $_SESSION['user_id']])) {
+        $_SESSION['new_app_secret'] = $newSecret;
         $success = 'İstemci anahtarı başarıyla yenilendi!';
     } else {
         $error = 'İstemci anahtarı yenilenemedi.';
@@ -119,7 +123,12 @@ $apps = getUserApps($_SESSION['user_id']);
                                 </div>
                                 <div class="detail-row">
                                     <strong>İstemci Anahtarı:</strong> 
-                                    <code><?php if ($app['secret_shown'] == 1) {echo "Hidden"; } else {echo htmlspecialchars($app['client_secret']); } ?></code>
+                                    <?php if (isset($_SESSION['new_app_secret']) && $app['secret_shown'] == 0): ?>
+                                        <code><?php echo htmlspecialchars($_SESSION['new_app_secret']); ?></code>
+                                        <?php unset($_SESSION['new_app_secret']); ?>
+                                    <?php else: ?>
+                                        <code>Hidden</code>
+                                    <?php endif; ?>
                                     <a href="?refresh_secret=<?php echo $app['id']; ?>" class="btn btn-small" onclick="return confirm('İstemci anahtarını yenilemek istediğinizden emin misiniz? Bu işlem mevcut anahtarı geçersiz kılacaktır.')">Yenile</a>
                                 </div>
                                 <div class="detail-row">
