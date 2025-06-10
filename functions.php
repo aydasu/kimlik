@@ -198,6 +198,14 @@ function handleProfilePictureUpload($file) {
         throw new Exception('File is too large. Maximum size is 5MB.');
     }
     
+    // Create uploads directory if it doesn't exist
+    $uploadDir = 'uploads/profile_pictures';
+    if (!file_exists($uploadDir)) {
+        if (!mkdir($uploadDir, 0777, true)) {
+            throw new Exception('Failed to create upload directory.');
+        }
+    }
+    
     // Create image from file
     $sourceImage = $file['type'] === 'image/jpeg' 
         ? imagecreatefromjpeg($file['tmp_name'])
