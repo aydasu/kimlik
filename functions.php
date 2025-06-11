@@ -8,38 +8,23 @@ function getUserById($id) {
     return $stmt->fetch(PDO::FETCH_ASSOC);
 }
 
-function getUserByEmail($email) {
+function getUserByNickname($nickname) {
     $pdo = Database::connect();
-    $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ?");
-    $stmt->execute([$email]);
+    $stmt = $pdo->prepare("SELECT * FROM users WHERE nickname = ?");
+    $stmt->execute([$nickname]);
     return $stmt->fetch(PDO::FETCH_ASSOC);
 }
 
-function createUser($email, $password, $name, $nickname = null) {
+function createUser($nickname, $password, $name) {
     $pdo = Database::connect();
     $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
     
-    // Generate @ayda.su email
-    $aydaEmail = generateAydaEmail($name, $nickname);
-    
-    $stmt = $pdo->prepare("INSERT INTO users (email, password, name, nickname, created_at) VALUES (?, ?, ?, ?, NOW())");
-    return $stmt->execute([$aydaEmail, $hashedPassword, $name, $nickname]);
+    $stmt = $pdo->prepare("INSERT INTO users (nickname, password, name, created_at) VALUES (?, ?, ?, NOW())");
+    return $stmt->execute([$nickname, $hashedPassword, $name]);
 }
 
-function generateAydaEmail($name, $nickname = null) {
-    $base = $nickname ? $nickname : $name;
-    $base = strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $base));
-    
-    $pdo = Database::connect();
-    $email = $base . '@' . EMAIL_DOMAIN;
-    $counter = 1;
-    
-    while (getUserByEmail($email)) {
-        $email = $base . $counter . '@' . EMAIL_DOMAIN;
-        $counter++;
-    }
-    
-    return $email;
+function generateEmail($nickname) {
+    return $nickname . '@' . EMAIL_DOMAIN;
 }
 
 function getUserApps($userId) {

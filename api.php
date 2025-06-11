@@ -51,7 +51,7 @@ switch ($path) {
         if ($user) {
             echo json_encode([
                 'id' => $user['id'],
-                'email' => $user['email'],
+                'email' => generateEmail($user['nickname']),
                 'name' => $user['name'],
                 'nickname' => $user['nickname'],
                 'profile_picture' => $user['profile_picture']

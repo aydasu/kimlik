@@ -126,7 +126,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['grant_type'])) {
         // Generate access token (JWT)
         $payload = [
             'sub' => $user['id'],
-            'email' => $user['email'],
+            'email' => generateEmail($user['nickname']),
             'name' => $user['name'],
             'nickname' => $user['nickname'],
             'profile_picture' => $user['profile_picture'],
@@ -185,7 +185,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['grant_type'])) {
         // Generate new access token
         $payload = [
             'sub' => $user['id'],
-            'email' => $user['email'],
+            'email' => generateEmail($user['nickname']),
             'name' => $user['name'],
             'nickname' => $user['nickname'],
             'profile_picture' => $user['profile_picture'],

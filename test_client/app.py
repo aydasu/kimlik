@@ -20,7 +20,7 @@ app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 
 # OAuth configuration
 CLIENT_ID = os.getenv('CLIENT_ID', '9a8282de8c17dc2cdf01dfd26e8c5f45')
-CLIENT_SECRET = os.getenv('CLIENT_SECRET', '4258615fdf106fcc918cec490b8051cd6237d8fcf9750fe7b45b58a7ba652a1c')
+CLIENT_SECRET = os.getenv('CLIENT_SECRET', 'ceda2ae65075d49d879398a7cd56dad45ce8ee699c9c906149464d2c34117894')
 REDIRECT_URI = os.getenv('REDIRECT_URI', 'http://localhost:5000/callback')
 AUTH_SERVER = os.getenv('AUTH_SERVER', 'http://localhost:8000')  # Change this to your OAuth server URL
 AUTH_ENDPOINT = f"{AUTH_SERVER}/oauth.php"

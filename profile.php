@@ -25,14 +25,14 @@ if ($_POST) {
         $pdo = Database::connect();
         
         // Update basic profile info
-        $stmt = $pdo->prepare("UPDATE users SET name = ?, nickname = ?, recovery_email = ? WHERE id = ?");
-        $stmt->execute([$name, $nickname, $recoveryEmail, $_SESSION['user_id']]);
+        $stmt = $pdo->prepare("UPDATE users SET name = ?, recovery_email = ? WHERE id = ?");
+        $stmt->execute([$name, $recoveryEmail, $_SESSION['user_id']]);
         
         // Handle profile picture upload
         if (isset($_FILES['profile_picture']) && $_FILES['profile_picture']['error'] === UPLOAD_ERR_OK) {
             try {
                 $profilePicturePath = handleProfilePictureUpload($_FILES['profile_picture']);
-                updateUserProfilePicture($_SESSION['user_id'], $profilePicturePath);
+                updateUserProfilePicture($_SESSION['user_id'], '/'.$profilePicturePath);
             } catch (Exception $e) {
                 $error = $e->getMessage();
             }
@@ -102,7 +102,7 @@ if ($_POST) {
                 
                 <div class="form-group">
                     <label>E-posta Adresi</label>
-                    <input type="email" value="<?php echo htmlspecialchars($user['email']); ?>" disabled>
+                    <input type="email" value="<?php echo htmlspecialchars(generateEmail($user['nickname'])); ?>" disabled>
                     <small>@ayda.su e-posta adresiniz değiştirilemez</small>
                 </div>
                 
@@ -111,10 +111,6 @@ if ($_POST) {
                     <input type="text" name="name" value="<?php echo htmlspecialchars($user['name']); ?>" required>
                 </div>
                 
-                <div class="form-group">
-                    <label>Kullanıcı Adı</label>
-                    <input type="text" name="nickname" value="<?php echo htmlspecialchars($user['nickname'] ?? ''); ?>">
-                </div>
                 
                 <div class="form-group">
                     <label>Kurtarma E-postası</label>

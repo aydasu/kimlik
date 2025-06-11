@@ -28,9 +28,10 @@ if ($_POST) {
         $error = 'Kullanıcı adında boşluk kullanılamaz.';
     } else {
         try {
-            $email = generateAydaEmail($name, $nickname);
-            
-            if (createUser($email, $password, $name, $nickname)) {
+            if (getUserByNickname($nickname)) {
+                $error = 'Bu kullanıcı adı zaten kullanılıyor.';
+            } else if (createUser($nickname, $password, $name)) {
+                $email = generateEmail($nickname);
                 $success = "Hesap başarıyla oluşturuldu! E-posta adresiniz: $email";
             } else {
                 $error = 'Hesap oluşturulamadı.';

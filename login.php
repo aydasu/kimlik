@@ -20,16 +20,9 @@ if ($_POST) {
     } else {
         // Check if input is a username or email
         $user = null;
-        if (strpos($email, '@') === false) {
-            // Input is a username, try to find user by nickname
-            $pdo = Database::connect();
-            $stmt = $pdo->prepare("SELECT * FROM users WHERE nickname = ?");
-            $stmt->execute([$email]);
-            $user = $stmt->fetch(PDO::FETCH_ASSOC);
-        } else {
-            // Input is an email, try to find user by email
-            $user = getUserByEmail($email);
-        }
+        // Input is a username, try to find user by nickname
+        $nickname = str_replace('@' . EMAIL_DOMAIN, '', $email);
+        $user = getUserByNickname($nickname);
         
         if ($user && password_verify($password, $user['password'])) {
             $_SESSION['user_id'] = $user['id'];
