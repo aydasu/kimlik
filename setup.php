@@ -40,7 +40,7 @@ if ($_POST) {
             $config .= "define('PASSWORD_MIN_LENGTH', 6);\n";
             $config .= "define('TOKEN_EXPIRY', 3600);\n";
             $config .= "define('AUTH_CODE_EXPIRY', 600);\n";
-            $config .= "define('EMAIL_DOMAIN', 'ayda.su');\n";
+            $config .= "define('EMAIL_DOMAIN', '\$_SERVER['HTTP_HOST']');\n";
             $config .= "?>";
             
             file_put_contents('config.php', $config);
@@ -52,7 +52,7 @@ if ($_POST) {
             
             // Create admin user
             $hashedPassword = password_hash($admin_password, PASSWORD_DEFAULT);
-            $stmt = $pdo->prepare("INSERT INTO users (email, password, name, is_admin, created_at) VALUES (?, ?, 'Yönetici', 1, NOW())");
+            $stmt = $pdo->prepare("INSERT INTO users (nickname, password, name, is_admin, created_at) VALUES (?, ?, 'Yönetici', 1, NOW())");
             $stmt->execute([$admin_email, $hashedPassword]);
             
             $success = 'Kurulum başarıyla tamamlandı! Şimdi giriş yapabilirsiniz.';
@@ -89,7 +89,7 @@ if ($_POST) {
                     <input type="password" name="db_pass" placeholder="Veritabanı Şifresi">
                     
                     <h3>Yönetici Hesabı</h3>
-                    <input type="email" name="admin_email" placeholder="Yönetici E-postası" required>
+                    <input type="text" name="admin_email" placeholder="Yönetici Kullanıcı Adı" required>
                     <input type="password" name="admin_password" placeholder="Yönetici Şifresi" required>
                     
                     <button type="submit" class="btn">Kimlik'i Kur</button>
