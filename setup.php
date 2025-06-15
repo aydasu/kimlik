@@ -12,6 +12,7 @@ $error = '';
 $success = '';
 
 if ($_POST) {
+    $maildomain = $_POST['maildomain'] ?? '';
     $host = $_POST['db_host'] ?? '';
     $name = $_POST['db_name'] ?? '';
     $user = $_POST['db_user'] ?? '';
@@ -19,7 +20,7 @@ if ($_POST) {
     $admin_email = $_POST['admin_email'] ?? '';
     $admin_password = $_POST['admin_password'] ?? '';
     
-    if (empty($host) || empty($name) || empty($user) || empty($admin_email) || empty($admin_password)) {
+    if (empty($maildomain) || empty($host) || empty($name) || empty($user) || empty($admin_email) || empty($admin_password)) {
         $error = 'Tüm alanlar gereklidir.';
     } else {
         // Test database connection
@@ -40,7 +41,7 @@ if ($_POST) {
             $config .= "define('PASSWORD_MIN_LENGTH', 6);\n";
             $config .= "define('TOKEN_EXPIRY', 3600);\n";
             $config .= "define('AUTH_CODE_EXPIRY', 600);\n";
-            $config .= "define('EMAIL_DOMAIN', $_SERVER['HTTP_HOST']);\n";
+            $config .= "define('EMAIL_DOMAIN', '$maildomain');\n";
             $config .= "?>";
             
             file_put_contents('config.php', $config);
@@ -90,6 +91,7 @@ if ($_POST) {
                     
                     <h3>Yönetici Hesabı</h3>
                     <input type="text" name="admin_email" placeholder="Yönetici Kullanıcı Adı" required>
+                    <input type="text" name="maildomain" placeholder="Mail domaini" required>
                     <input type="password" name="admin_password" placeholder="Yönetici Şifresi" required>
                     
                     <button type="submit" class="btn">Kimlik'i Kur</button>
