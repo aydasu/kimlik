@@ -1,0 +1,582 @@
+# Kimlik OAuth Integration Guide
+
+## Overview
+
+This guide explains how to integrate Kimlik OAuth into your applications. Kimlik is a minimalist OAuth2 server that implements the Authorization Code flow and provides JWT access tokens.
+
+## Prerequisites
+
+- A running Kimlik OAuth server
+- Your application registered in Kimlik with:
+  - Client ID
+  - Client Secret  
+  - Redirect URI
+
+## OAuth2 Flow Implementation
+
+### Step 1: Authorization Request
+
+Redirect users to Kimlik's authorization endpoint:
+
+```
+GET https://your-kimlik-server.com/oauth.php
+```
+
+**Parameters:**
+- `response_type=code` (required)
+- `client_id=YOUR_CLIENT_ID` (required)
+- `redirect_uri=YOUR_CALLBACK_URL` (required)
+- `state=RANDOM_STRING` (recommended for CSRF protection)
+
+**Example URL:**
+```
+https://kimlik.example.com/oauth.php?response_type=code&client_id=abc123&redirect_uri=https://myapp.com/callback&state=xyz789
+```
+
+### Step 2: Handle Callback
+
+After user authorization, Kimlik redirects to your callback URL with:
+- `code`: Authorization code (if approved)
+- `state`: The state parameter you sent
+- `error`: Error code (if denied)
+
+### Step 3: Exchange Code for Tokens
+
+**Endpoint:** `POST https://your-kimlik-server.com/oauth.php`
+
+**Headers:**
+```
+Content-Type: application/x-www-form-urlencoded
+```
+
+**Body:**
+```
+grant_type=authorization_code
+code=AUTHORIZATION_CODE_FROM_CALLBACK
+client_id=YOUR_CLIENT_ID
+client_secret=YOUR_CLIENT_SECRET
+redirect_uri=YOUR_CALLBACK_URL
+```
+
+**Success Response:**
+```json
+{
+    "access_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+    "refresh_token": "1a2b3c4d5e6f7g8h9i0j...",
+    "token_type": "Bearer",
+    "expires_in": 3600
+}
+```
+
+**Error Response:**
+```json
+{
+    "error": "invalid_grant"
+}
+```
+
+### Step 4: Use Access Token
+
+Make API calls with the Bearer token:
+
+```
+GET https://your-kimlik-server.com/api.php/user
+Authorization: Bearer YOUR_ACCESS_TOKEN
+```
+
+**Response:**
+```json
+{
+    "id": 123,
+    "email": "user@domain.com",
+    "name": "John Doe",
+    "nickname": "johndoe",
+    "profile_picture": "uploads/profile_pictures/abc123.webp"
+}
+```
+
+### Step 5: Refresh Tokens
+
+When access token expires, use refresh token:
+
+**Endpoint:** `POST https://your-kimlik-server.com/oauth.php`
+
+**Body:**
+```
+grant_type=refresh_token
+refresh_token=YOUR_REFRESH_TOKEN
+client_id=YOUR_CLIENT_ID
+client_secret=YOUR_CLIENT_SECRET
+```
+
+## Language-Specific Examples
+
+### PHP Implementation
+
+```php
+<?php
+class KimlikOAuth {
+    private $clientId;
+    private $clientSecret;
+    private $redirectUri;
+    private $serverUrl;
+    
+    public function __construct($clientId, $clientSecret, $redirectUri, $serverUrl) {
+        $this->clientId = $clientId;
+        $this->clientSecret = $clientSecret;
+        $this->redirectUri = $redirectUri;
+        $this->serverUrl = $serverUrl;
+    }
+    
+    public function getAuthorizationUrl($state = null) {
+        $params = [
+            'response_type' => 'code',
+            'client_id' => $this->clientId,
+            'redirect_uri' => $this->redirectUri
+        ];
+        
+        if ($state) {
+            $params['state'] = $state;
+        }
+        
+        return $this->serverUrl . '/oauth.php?' . http_build_query($params);
+    }
+    
+    public function exchangeCodeForTokens($code) {
+        $data = [
+            'grant_type' => 'authorization_code',
+            'code' => $code,
+            'client_id' => $this->clientId,
+            'client_secret' => $this->clientSecret,
+            'redirect_uri' => $this->redirectUri
+        ];
+        
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $this->serverUrl . '/oauth.php');
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/x-www-form-urlencoded']);
+        
+        $response = curl_exec($ch);
+        curl_close($ch);
+        
+        return json_decode($response, true);
+    }
+    
+    public function getUserInfo($accessToken) {
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $this->serverUrl . '/api.php/user');
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Authorization: Bearer ' . $accessToken
+        ]);
+        
+        $response = curl_exec($ch);
+        curl_close($ch);
+        
+        return json_decode($response, true);
+    }
+    
+    public function refreshToken($refreshToken) {
+        $data = [
+            'grant_type' => 'refresh_token',
+            'refresh_token' => $refreshToken,
+            'client_id' => $this->clientId,
+            'client_secret' => $this->clientSecret
+        ];
+        
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $this->serverUrl . '/oauth.php');
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/x-www-form-urlencoded']);
+        
+        $response = curl_exec($ch);
+        curl_close($ch);
+        
+        return json_decode($response, true);
+    }
+}
+
+// Usage Example
+session_start();
+
+$oauth = new KimlikOAuth(
+    'your_client_id',
+    'your_client_secret', 
+    'https://yourapp.com/callback',
+    'https://kimlik.example.com'
+);
+
+// Login flow
+if (!isset($_SESSION['access_token'])) {
+    if (isset($_GET['code'])) {
+        // Handle callback
+        $tokens = $oauth->exchangeCodeForTokens($_GET['code']);
+        if (isset($tokens['access_token'])) {
+            $_SESSION['access_token'] = $tokens['access_token'];
+            $_SESSION['refresh_token'] = $tokens['refresh_token'];
+            $_SESSION['expires_at'] = time() + $tokens['expires_in'];
+        }
+    } else {
+        // Redirect to authorization
+        $state = bin2hex(random_bytes(16));
+        $_SESSION['oauth_state'] = $state;
+        header('Location: ' . $oauth->getAuthorizationUrl($state));
+        exit;
+    }
+}
+
+// Get user info
+if (isset($_SESSION['access_token'])) {
+    $userInfo = $oauth->getUserInfo($_SESSION['access_token']);
+    echo "Welcome, " . $userInfo['name'];
+}
+?>
+```
+
+### JavaScript (Node.js) Implementation
+
+```javascript
+const express = require('express');
+const session = require('express-session');
+const axios = require('axios');
+const crypto = require('crypto');
+
+const app = express();
+app.use(session({ secret: 'your-secret-key', resave: false, saveUninitialized: true }));
+
+const KIMLIK_CONFIG = {
+    clientId: 'your_client_id',
+    clientSecret: 'your_client_secret',
+    redirectUri: 'http://localhost:3000/callback',
+    serverUrl: 'https://kimlik.example.com'
+};
+
+class KimlikOAuth {
+    constructor(config) {
+        this.config = config;
+    }
+    
+    getAuthorizationUrl(state) {
+        const params = new URLSearchParams({
+            response_type: 'code',
+            client_id: this.config.clientId,
+            redirect_uri: this.config.redirectUri,
+            state: state
+        });
+        
+        return `${this.config.serverUrl}/oauth.php?${params.toString()}`;
+    }
+    
+    async exchangeCodeForTokens(code) {
+        try {
+            const response = await axios.post(`${this.config.serverUrl}/oauth.php`, {
+                grant_type: 'authorization_code',
+                code: code,
+                client_id: this.config.clientId,
+                client_secret: this.config.clientSecret,
+                redirect_uri: this.config.redirectUri
+            }, {
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+            });
+            
+            return response.data;
+        } catch (error) {
+            throw new Error('Token exchange failed: ' + error.message);
+        }
+    }
+    
+    async getUserInfo(accessToken) {
+        try {
+            const response = await axios.get(`${this.config.serverUrl}/api.php/user`, {
+                headers: { 'Authorization': `Bearer ${accessToken}` }
+            });
+            
+            return response.data;
+        } catch (error) {
+            throw new Error('Failed to get user info: ' + error.message);
+        }
+    }
+    
+    async refreshToken(refreshToken) {
+        try {
+            const response = await axios.post(`${this.config.serverUrl}/oauth.php`, {
+                grant_type: 'refresh_token',
+                refresh_token: refreshToken,
+                client_id: this.config.clientId,
+                client_secret: this.config.clientSecret
+            }, {
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+            });
+            
+            return response.data;
+        } catch (error) {
+            throw new Error('Token refresh failed: ' + error.message);
+        }
+    }
+}
+
+const oauth = new KimlikOAuth(KIMLIK_CONFIG);
+
+// Routes
+app.get('/', async (req, res) => {
+    if (!req.session.accessToken) {
+        const state = crypto.randomBytes(16).toString('hex');
+        req.session.oauthState = state;
+        const authUrl = oauth.getAuthorizationUrl(state);
+        res.redirect(authUrl);
+    } else {
+        try {
+            const userInfo = await oauth.getUserInfo(req.session.accessToken);
+            res.json({ message: `Welcome, ${userInfo.name}!`, user: userInfo });
+        } catch (error) {
+            // Token might be expired, clear session
+            req.session.destroy();
+            res.redirect('/');
+        }
+    }
+});
+
+app.get('/callback', async (req, res) => {
+    const { code, state, error } = req.query;
+    
+    if (error) {
+        return res.status(400).json({ error: 'Authorization denied' });
+    }
+    
+    if (!code || !state || state !== req.session.oauthState) {
+        return res.status(400).json({ error: 'Invalid request' });
+    }
+    
+    try {
+        const tokens = await oauth.exchangeCodeForTokens(code);
+        req.session.accessToken = tokens.access_token;
+        req.session.refreshToken = tokens.refresh_token;
+        req.session.expiresAt = Date.now() + (tokens.expires_in * 1000);
+        
+        res.redirect('/');
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.listen(3000, () => {
+    console.log('Server running on http://localhost:3000');
+});
+```
+
+### Python (Flask) Implementation
+
+```python
+from flask import Flask, session, request, redirect, jsonify
+import requests
+import secrets
+import time
+
+app = Flask(__name__)
+app.secret_key = 'your-secret-key'
+
+KIMLIK_CONFIG = {
+    'client_id': 'your_client_id',
+    'client_secret': 'your_client_secret',
+    'redirect_uri': 'http://localhost:5000/callback',
+    'server_url': 'https://kimlik.example.com'
+}
+
+class KimlikOAuth:
+    def __init__(self, config):
+        self.config = config
+    
+    def get_authorization_url(self, state):
+        params = {
+            'response_type': 'code',
+            'client_id': self.config['client_id'],
+            'redirect_uri': self.config['redirect_uri'],
+            'state': state
+        }
+        
+        return f"{self.config['server_url']}/oauth.php?" + '&'.join([f"{k}={v}" for k, v in params.items()])
+    
+    def exchange_code_for_tokens(self, code):
+        data = {
+            'grant_type': 'authorization_code',
+            'code': code,
+            'client_id': self.config['client_id'],
+            'client_secret': self.config['client_secret'],
+            'redirect_uri': self.config['redirect_uri']
+        }
+        
+        response = requests.post(f"{self.config['server_url']}/oauth.php", data=data)
+        response.raise_for_status()
+        return response.json()
+    
+    def get_user_info(self, access_token):
+        headers = {'Authorization': f'Bearer {access_token}'}
+        response = requests.get(f"{self.config['server_url']}/api.php/user", headers=headers)
+        response.raise_for_status()
+        return response.json()
+    
+    def refresh_token(self, refresh_token):
+        data = {
+            'grant_type': 'refresh_token',
+            'refresh_token': refresh_token,
+            'client_id': self.config['client_id'],
+            'client_secret': self.config['client_secret']
+        }
+        
+        response = requests.post(f"{self.config['server_url']}/oauth.php", data=data)
+        response.raise_for_status()
+        return response.json()
+
+oauth = KimlikOAuth(KIMLIK_CONFIG)
+
+@app.route('/')
+def home():
+    if 'access_token' not in session:
+        state = secrets.token_urlsafe(16)
+        session['oauth_state'] = state
+        auth_url = oauth.get_authorization_url(state)
+        return redirect(auth_url)
+    
+    try:
+        user_info = oauth.get_user_info(session['access_token'])
+        return jsonify({'message': f"Welcome, {user_info['name']}!", 'user': user_info})
+    except:
+        session.clear()
+        return redirect('/')
+
+@app.route('/callback')
+def callback():
+    error = request.args.get('error')
+    if error:
+        return jsonify({'error': 'Authorization denied'}), 400
+    
+    code = request.args.get('code')
+    state = request.args.get('state')
+    
+    if not code or not state or state != session.get('oauth_state'):
+        return jsonify({'error': 'Invalid request'}), 400
+    
+    try:
+        tokens = oauth.exchange_code_for_tokens(code)
+        session['access_token'] = tokens['access_token']
+        session['refresh_token'] = tokens['refresh_token']
+        session['expires_at'] = time.time() + tokens['expires_in']
+        
+        return redirect('/')
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+if __name__ == '__main__':
+    app.run(debug=True)
+```
+
+## Security Considerations
+
+### 1. State Parameter
+Always use the `state` parameter to prevent CSRF attacks:
+```php
+$state = bin2hex(random_bytes(16));
+$_SESSION['oauth_state'] = $state;
+// Include state in authorization URL
+```
+
+### 2. Token Storage
+- Store tokens securely (encrypted sessions, secure cookies)
+- Never expose tokens in URLs or client-side JavaScript
+- Use HTTPS in production
+
+### 3. Token Validation
+- Validate JWT tokens if needed client-side
+- Check token expiration before API calls
+- Implement automatic token refresh
+
+### 4. Error Handling
+Handle common OAuth errors:
+- `invalid_client`: Invalid client credentials
+- `invalid_grant`: Invalid/expired authorization code
+- `access_denied`: User denied authorization
+
+## Common Integration Patterns
+
+### Middleware for Protected Routes
+
+```php
+// PHP Middleware Example
+function requireAuth() {
+    if (!isset($_SESSION['access_token'])) {
+        header('Location: /login');
+        exit;
+    }
+    
+    // Check if token is expired
+    if (time() >= $_SESSION['expires_at']) {
+        // Try to refresh token
+        $oauth = new KimlikOAuth(/* config */);
+        $newTokens = $oauth->refreshToken($_SESSION['refresh_token']);
+        
+        if ($newTokens && isset($newTokens['access_token'])) {
+            $_SESSION['access_token'] = $newTokens['access_token'];
+            $_SESSION['refresh_token'] = $newTokens['refresh_token'];
+            $_SESSION['expires_at'] = time() + $newTokens['expires_in'];
+        } else {
+            session_destroy();
+            header('Location: /login');
+            exit;
+        }
+    }
+}
+```
+
+### Auto-refresh Token Logic
+
+```javascript
+// JavaScript auto-refresh example
+async function makeAuthenticatedRequest(url, options = {}) {
+    // Check if token is about to expire (5 minutes buffer)
+    if (Date.now() >= (session.expiresAt - 300000)) {
+        try {
+            const newTokens = await oauth.refreshToken(session.refreshToken);
+            session.accessToken = newTokens.access_token;
+            session.refreshToken = newTokens.refresh_token;
+            session.expiresAt = Date.now() + (newTokens.expires_in * 1000);
+        } catch (error) {
+            // Refresh failed, redirect to login
+            window.location.href = '/login';
+            return;
+        }
+    }
+    
+    const response = await fetch(url, {
+        ...options,
+        headers: {
+            'Authorization': `Bearer ${session.accessToken}`,
+            ...options.headers
+        }
+    });
+    
+    return response;
+}
+```
+
+## Troubleshooting
+
+### Common Issues
+
+1. **Invalid redirect URI**: Ensure the redirect URI matches exactly what's registered
+2. **Token expired**: Implement automatic refresh logic
+3. **CORS issues**: Configure proper CORS headers on Kimlik server
+4. **State mismatch**: Verify state parameter handling in your callback
+
+### Debug Mode
+
+Enable logging to troubleshoot OAuth flow:
+```php
+error_log("Authorization code: " . $code);
+error_log("Token response: " . json_encode($tokenResponse));
+```
+
+This guide provides everything needed to integrate Kimlik OAuth into your applications using the standard OAuth2 Authorization Code flow.
