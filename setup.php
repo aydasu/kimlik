@@ -40,7 +40,7 @@ if ($_POST) {
             $config .= "define('PASSWORD_MIN_LENGTH', 6);\n";
             $config .= "define('TOKEN_EXPIRY', 3600);\n";
             $config .= "define('AUTH_CODE_EXPIRY', 600);\n";
-            $config .= "define('EMAIL_DOMAIN', '\$_SERVER['HTTP_HOST']');\n";
+            $config .= "define('EMAIL_DOMAIN', $_SERVER['HTTP_HOST']);\n";
             $config .= "?>";
             
             file_put_contents('config.php', $config);
