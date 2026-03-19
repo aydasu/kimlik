@@ -215,156 +215,91 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['grant_type'])) {
 }
 ?>
 <!DOCTYPE html>
-<html>
+<html lang="tr">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kimlik - Erişim Yetkilendirme</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="wvisual/css/wvisual.css">
     <style>
-        .oauth-container {
-            max-width: 500px;
-            margin: 50px auto;
-            background: white;
-            padding: 40px;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-        }
-
-        .app-header {
+        .wv-oauth-card {
+            max-width: 480px;
+            margin: 4rem auto;
             text-align: center;
-            margin-bottom: 30px;
         }
-
-        .app-logo {
+        .wv-app-logo {
             width: 80px;
             height: 80px;
-            background: #f8f9fa;
-            border-radius: 16px;
-            margin: 0 auto 20px;
+            background: linear-gradient(135deg, rgba(79, 70, 229, 0.1), rgba(14, 165, 233, 0.1));
+            border-radius: 20px;
+            margin: 0 auto 1.5rem;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 32px;
-            color: #3498db;
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--wv-primary);
+            border: 1px solid rgba(79, 70, 229, 0.2);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
         }
-
-        .app-name {
-            font-size: 24px;
-            color: #2c3e50;
-            margin-bottom: 10px;
-        }
-
-        .app-description {
-            color: #7f8c8d;
-            margin-bottom: 20px;
-        }
-
-        .permissions-list {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 8px;
-            margin: 20px 0;
-        }
-
-        .permissions-list h3 {
-            color: #2c3e50;
-            margin-bottom: 15px;
-            font-size: 18px;
-        }
-
-        .permission-item {
-            display: flex;
-            align-items: center;
-            margin-bottom: 10px;
-            color: #34495e;
-        }
-
-        .permission-item:last-child {
-            margin-bottom: 0;
-        }
-
-        .permission-item i {
-            color: #27ae60;
-            margin-right: 10px;
-        }
-
-        .auth-buttons {
-            display: flex;
-            gap: 15px;
-            margin-top: 30px;
-        }
-
-        .auth-buttons button {
-            flex: 1;
-            padding: 12px;
-            border: none;
-            border-radius: 6px;
-            font-size: 16px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .btn-authorize {
-            background: #27ae60;
-            color: white;
-        }
-
-        .btn-authorize:hover {
-            background: #219a52;
-        }
-
-        .btn-deny {
-            background: #e74c3c;
-            color: white;
-        }
-
-        .btn-deny:hover {
-            background: #c0392b;
-        }
-
-        .security-info {
-            margin-top: 20px;
-            padding: 15px;
-            background: #e8f4f8;
-            border-radius: 6px;
-            color: #2980b9;
-            font-size: 14px;
-        }
-
-        .security-info i {
-            margin-right: 5px;
+        .wv-permissions-box {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--wv-border);
+            border-radius: var(--wv-radius);
+            padding: 1.5rem;
+            margin: 2rem 0;
+            text-align: left;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="oauth-container">
+    <div class="wv-container">
+        <div class="wv-card wv-oauth-card wv-animate-fade-in">
             <?php if ($error): ?>
-                <div class="error"><?php echo htmlspecialchars($error); ?></div>
+                <div class="wv-alert wv-alert-error"><?php echo htmlspecialchars($error); ?></div>
+                <div class="wv-mt-4">
+                    <a href="index.php" class="wv-btn wv-btn-secondary">Geri Dön</a>
+                </div>
             <?php elseif (isset($app)): ?>
-                <div class="app-header">
-                    <div class="app-logo">
-                        <?php echo strtoupper(substr($app['name'], 0, 1)); ?>
+                <div class="wv-app-logo">
+                    <?php echo strtoupper(substr($app['name'], 0, 1)); ?>
+                </div>
+                
+                <h1 style="font-size: 1.75rem; margin-bottom: 0.5rem;"><?php echo htmlspecialchars($app['name']); ?></h1>
+                
+                <p class="wv-text-muted">
+                    <strong style="color: var(--wv-text-main);">Kimlik</strong> hesabınıza erişim izni istiyor.
+                </p>
+                
+                <?php if (!empty($app['description'])): ?>
+                    <p style="font-size: 0.9rem;" class="wv-mb-3"><?php echo htmlspecialchars($app['description']); ?></p>
+                <?php endif; ?>
+
+                <div class="wv-permissions-box">
+                    <h3 style="font-size: 1rem; margin-bottom: 1rem;">Uygulama şunlara erişebilecek:</h3>
+                    
+                    <div class="wv-flex wv-items-center wv-mb-2">
+                        <span style="color: var(--wv-success); margin-right: 0.75rem; font-size: 1.25rem;">✓</span>
+                        <div class="wv-flex-col">
+                            <span style="font-weight: 600;">Temel Profil Bilgileri</span>
+                            <span class="wv-text-muted" style="font-size: 0.85rem;">Adınız, kullanıcı adınız ve profil fotoğrafınız.</span>
+                        </div>
                     </div>
-                    <h1 class="app-name"><?php echo htmlspecialchars($app['name']); ?></h1>
-                    <p class="app-description"><?php echo htmlspecialchars($app['description']); ?></p>
                 </div>
 
-                <div class="permissions-list">
-                    <h3>Bu uygulama aşağıdaki bilgilere erişebilir:</h3>
-                    <div class="permission-item">
-                        <i>✓</i>
-                        <span>Basit profil bilgilerine erişim</span>
-                    </div>
+                <div class="wv-mb-4" style="font-size: 0.85rem; color: var(--wv-text-muted);">
+                    <span style="color: var(--wv-primary);">ℹ</span> İzin verdiğinizde <strong><?php echo htmlspecialchars($app['redirect_uri']); ?></strong> adresine yönlendirileceksiniz.
                 </div>
 
                 <form method="POST">
-                    <div class="auth-buttons">
-                        <button type="submit" name="authorize" value="yes" class="btn-authorize">Erişim Yetkilendir</button>
-                        <button type="submit" name="authorize" value="no" class="btn-deny">Reddet</button>
+                    <div class="wv-flex wv-gap-4">
+                        <button type="submit" name="authorize" value="no" class="wv-btn wv-btn-secondary" style="flex: 1;">İptal</button>
+                        <button type="submit" name="authorize" value="yes" class="wv-btn wv-btn-primary" style="flex: 2;">Erişime İzin Ver</button>
                     </div>
                 </form>
             <?php endif; ?>
         </div>
     </div>
+    <script src="wvisual/js/wvisual.js"></script>
 </body>
 </html> 

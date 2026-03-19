@@ -43,28 +43,40 @@ if ($_POST) {
 }
 ?>
 <!DOCTYPE html>
-<html>
+<html lang="tr">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kimlik - Giriş</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="wvisual/css/wvisual.css">
 </head>
-<body>
-    <div class="container">
-        <div class="auth-form">
-            <h1>Kimlik'e Giriş Yap</h1>
-            
-            <?php if ($error): ?>
-                <div class="error"><?php echo htmlspecialchars($error); ?></div>
-            <?php endif; ?>
-            
-            <form method="POST">
-                <input type="text" name="email" placeholder="E-posta Adresi veya Kullanıcı Adı" pattern="[^\s]*" title="Kullanıcı adında boşluk kullanılamaz" required>
-                <input type="password" name="password" placeholder="Şifre" required>
-                <button type="submit" class="btn">Giriş Yap</button>
-            </form>
-            
-            <p><a href="register.php">Hesabınız yok mu? Kayıt Ol</a></p>
+<body class="wv-auth-layout">
+    <div class="wv-auth-card wv-card wv-animate-fade-in">
+        <div class="wv-text-center wv-mb-4">
+            <h1 class="wv-logo" style="font-size: 2.5rem; margin-bottom: 0.5rem; display: inline-block;">Kimlik</h1>
+            <p>Hesabınıza giriş yapın</p>
+        </div>
+        
+        <?php if ($error): ?>
+            <div class="wv-alert wv-alert-error"><?php echo htmlspecialchars($error); ?></div>
+        <?php endif; ?>
+        
+        <form method="POST">
+            <div class="wv-form-group">
+                <label class="wv-label">E-posta Adresi veya Kullanıcı Adı</label>
+                <input type="text" name="email" class="wv-input" placeholder="ornek@ayda.su" pattern="[^\s]*" title="Kullanıcı adında boşluk kullanılamaz" required>
+            </div>
+            <div class="wv-form-group">
+                <label class="wv-label">Şifre</label>
+                <input type="password" name="password" class="wv-input" placeholder="••••••••" required>
+            </div>
+            <button type="submit" class="wv-btn wv-btn-primary wv-btn-block wv-mt-4">Giriş Yap</button>
+        </form>
+        
+        <div class="wv-text-center wv-mt-4">
+            <p class="wv-mb-0">Hesabınız yok mu? <a href="register.php">Kayıt Ol</a></p>
         </div>
     </div>
+    <script src="wvisual/js/wvisual.js"></script>
 </body>
 </html> 

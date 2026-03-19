@@ -283,3 +283,16 @@ function revokeAllRefreshTokens($userId, $appId) {
     $stmt = $pdo->prepare("DELETE FROM refresh_tokens WHERE user_id = ? AND app_id = ?");
     return $stmt->execute([$userId, $appId]);
 }
+
+function revokeAllAuthorizationCodes($userId, $appId) {
+    $pdo = Database::connect();
+    $stmt = $pdo->prepare("DELETE FROM authorization_codes WHERE user_id = ? AND app_id = ?");
+    return $stmt->execute([$userId, $appId]);
+}
+
+function getAppByClientId($clientId) {
+    $pdo = Database::connect();
+    $stmt = $pdo->prepare("SELECT * FROM apps WHERE client_id = ?");
+    $stmt->execute([$clientId]);
+    return $stmt->fetch(PDO::FETCH_ASSOC);
+}

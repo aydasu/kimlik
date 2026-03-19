@@ -19,10 +19,10 @@ app.config['PERMANENT_SESSION_LIFETIME'] = 3600  # 1 hour
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 
 # OAuth configuration
-CLIENT_ID = os.getenv('CLIENT_ID', '9a8282de8c17dc2cdf01dfd26e8c5f45')
-CLIENT_SECRET = os.getenv('CLIENT_SECRET', 'ceda2ae65075d49d879398a7cd56dad45ce8ee699c9c906149464d2c34117894')
+CLIENT_ID = os.getenv('CLIENT_ID', '8600a6df9cbc6d9f8de46b5a2247d563')
+CLIENT_SECRET = os.getenv('CLIENT_SECRET', 'f4a622b3c04e3f25b2130fd1312e9c72ae5cd5d81829092d35cb848a6bb945bc')
 REDIRECT_URI = os.getenv('REDIRECT_URI', 'http://localhost:5000/callback')
-AUTH_SERVER = os.getenv('AUTH_SERVER', 'http://localhost:8000')  # Change this to your OAuth server URL
+AUTH_SERVER = os.getenv('AUTH_SERVER', 'http://id.aydasu.me.uk:8080')  # Change this to your OAuth server URL
 AUTH_ENDPOINT = f"{AUTH_SERVER}/oauth.php"
 TOKEN_ENDPOINT = f"{AUTH_SERVER}/oauth.php"  # Token endpoint is also oauth.php
 API_ENDPOINT = f"{AUTH_SERVER}/api.php"
@@ -102,7 +102,7 @@ def home():
         if response.status_code == 200:
             user_info = response.json()
         else:
-            error = "Kullanıcı bilgileri alınamadı"
+            error = f"Kullanıcı bilgileri alınamadı {response.text}"
             session.clear()
     
     return render_template_string(HOME_TEMPLATE, user_info=user_info, error=error)

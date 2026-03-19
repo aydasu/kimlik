@@ -1,0 +1,3 @@
+[submodule "wvisual"]
+	path = wvisual
+	url = git@github.com:aydasu/wvisual.git

@@ -5,13 +5,14 @@ class Database {
     public static function connect() {
         if (self::$pdo === null) {
             try {
+                $dsn = "mysql:unix_socket=/mnt/DATA4/shit/var/run/mysql.sock;dbname=" . DB_NAME;
                 self::$pdo = new PDO(
-                    "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME,
+                    $dsn,
                     DB_USER,
                     DB_PASS,
                     [
                         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-                        PDO::MYSQL_ATTR_INIT_COMMAND => "SET time_zone = '+00:00'"
+                        1002 => "SET time_zone = '+00:00'"
                     ]
                 );
             } catch (PDOException $e) {

@@ -25,7 +25,8 @@ if ($_POST) {
     } else {
         // Test database connection
         try {
-            $pdo = new PDO("mysql:host=$host;dbname=$name", $user, $pass);
+            $dsn = "mysql:unix_socket=/mnt/DATA4/shit/var/run/mysql.sock;dbname=$name";
+            $pdo = new PDO($dsn, $user, $pass);
             $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
             
             // Create config file

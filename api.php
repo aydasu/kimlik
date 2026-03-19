@@ -41,6 +41,15 @@ if ($payload['exp'] < time()) {
     exit();
 }
 
+// Verify app is still authorized by user
+$clientId = $payload['aud'] ?? '';
+$app = getAppByClientId($clientId);
+if (!$app || !isAppAuthorized($payload['sub'], $app['id'])) {
+    http_response_code(401);
+    echo json_encode(['error' => 'Application access revoked or unauthorized']);
+    exit();
+}
+
 // Handle API endpoints
 $path = $_SERVER['PATH_INFO'] ?? '';
 
