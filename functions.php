@@ -283,4 +283,3 @@ function revokeAllRefreshTokens($userId, $appId) {
     $stmt = $pdo->prepare("DELETE FROM refresh_tokens WHERE user_id = ? AND app_id = ?");
     return $stmt->execute([$userId, $appId]);
 }
-?> 

@@ -11,4 +11,3 @@ define('PASSWORD_MIN_LENGTH', 6);
 define('TOKEN_EXPIRY', 3600);
 define('AUTH_CODE_EXPIRY', 600);
 define('EMAIL_DOMAIN', 'ayda.su');
-?>

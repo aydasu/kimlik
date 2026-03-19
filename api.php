@@ -67,4 +67,3 @@ switch ($path) {
         echo json_encode(['error' => 'Endpoint not found']);
         break;
 }
-?> 
