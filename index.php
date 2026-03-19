@@ -134,7 +134,7 @@ $authorizedApps = getUserAuthorizedApps($user_id);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kimlik - Panel</title>
-    <link rel="stylesheet" href="wvisual/css/wvisual.css">
+    <link rel="stylesheet" href="wvisuals/css/wvisual.css">
     <style>
         .section-title {
             padding-bottom: 0.5rem;
@@ -320,6 +320,6 @@ $authorizedApps = getUserAuthorizedApps($user_id);
             </div>
         </div>
     </main>
-    <script src="wvisual/js/wvisual.js"></script>
+    <script src="wvisuals/js/wvisual.js"></script>
 </body>
 </html>
